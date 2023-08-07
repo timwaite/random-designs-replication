@@ -53,7 +53,6 @@ des <- des[do.call(order,des),]
 
 # write.csv(des, file="design_3factor.csv")
 des = read.csv("design_3factor.csv")[,2:4]
-
 ## also tried a more thorough search incorporating d multiple random starts and consolidation of replicates via point exchange 
 ## gives a similar design with replication and the same objective function value to 4dp
 #
@@ -144,10 +143,11 @@ plot(pc, optDelta.split, type="l", col="grey",
      xlab="Relative std dev of discrepancy (randomly selected point)",
      sub="(3-factor example)")
 lines(pc, optDelta.repl, col=1)
-legend("bottomright", c("Retain replicates", "Split replicates"), lty=1, col=c(1,"grey"))
+abline(h=0.2780762, lty=2)
+legend("bottomright", c("Retain replicates", "delta = 0.278", "Split replicates"), lty=c(1,2,1), col=c(1,1,"grey"))
 dev.off()
 
-pdf("../figures/efficieny-plot-3factor.pdf", width=5, height=5)
+pdf("../figures/efficiency-plot-3factor.pdf", width=5, height=5)
 plot(pc, minPsi.repl/minPsi.split,type="l", 
      xlab="Relative std dev of discrepancy (randomly selected point)", 
      ylab="Efficiency (splitting vs replication)",
@@ -157,3 +157,40 @@ dev.off()
 
 results_3factor <- cbind(pc, optDelta.split, optDelta.repl, minPsi.split, minPsi.repl, eff=minPsi.repl/minPsi.split)
 # write.csv(results_3factor, file="results_3factor.csv")
+
+
+# investigating unusual leveling off in graphs of optimal delta
+
+# plot figure of maximal principal eigenvalue of bias-sensitivity matrix for varying delta 
+# also identify the maximizing t
+
+numDeltas = 500
+deltas <- seq(from=0.01,to=0.40,length=numDeltas) # grid of delta values 
+
+Tmax <- rbind( 2*randomLHS(50,3)-1, as.matrix( expand.grid(c(-1,1), c(-1,1),c(-1,1)) ) )
+
+lambdaMax <- rep(NA,numDeltas) # space to store max eigenvalue for each delta
+worstIdx <- rep(NA,numDeltas) # space to store index of maximizing t for each delta 
+
+lambdas <- rep(NA,nrow(Tmax))  # space for eigenvalue for each different t (fixed delta)
+
+# NB this loop takes some time 
+for (i in 1:numDeltas) {
+  for (j in 1:nrow(Tmax)) {
+    lambdas[j] <- (biassq.approx.repl( Tmax[j,], heur.des.repl(deltas[i]), r=r, deltas[i], 1, f, A) -1) * deltas[i]^3
+  }
+  worstIdx[i] = which.max(lambdas)
+  lambdaMax[i] = max(lambdas)
+}
+ 
+pdf("../figures/3factor-repl-eigenvalue.pdf", width=5, height=5)
+par(mar=c(5,5,4,2)+0.1)
+plot(deltas,lambdaMax,
+     type="l", 
+     xlab=expression(delta), 
+     ylab=expression(max[t%in%T]*lambda[max](dot(K)[d(t)])))
+tChanges <- abs(diff(worstIdx))>0 # at which delta does the maximizing t change?
+abline(v=deltas[tChanges][1], lty=2) # add vertical lines to the plot at such values
+legend("topleft", legend=c("delta = 0.278"), lty=2)
+dev.off()
+                    
