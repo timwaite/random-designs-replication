@@ -2,6 +2,8 @@
 #  Supporting material for "Replication in random translation designs for model-robust prediction"  
 # by Waite, T.W. (2023+)
 
+# functions underpinning objective function calculations
+
 tr <- function(X) { sum(diag(X)) }
 
 Fmat <- function(xi, f) {
@@ -115,3 +117,25 @@ Psi.approx.repl <- function( xi.bar, r, delta,  Tmc, f, A, sigma2.UB, Tmax, tau2
   
   MIV1 + max(biassq1)
 }
+
+optimal_heuristic_stats <- function(heuristic, tau2, modelfunction, A, Tmc, Tmax ) {
+  PsiH <- function(delta) { 
+    Psi.approx.repl( xi.bar = heuristic$meandesign(delta), 
+                     r = heuristic$r, 
+                     delta, Tmc, f=modelfunction, A, sigma2.UB=1, Tmax, tau2=tau2 ) 
+  } 
+  # compute optimal delta 
+  optH <- optimize(Vectorize(PsiH), lower=0.0001, upper=heuristic$deltaBound)  
+  optDelta <- optH$minimum
+  minPsi <- optH$objective
+  MIV <- MIV.approx.repl(xi.bar=heuristic$meandesign(optDelta), 
+                         r=heuristic$r, optDelta, Tmc, f=modelfunction, A, 1)
+  MISB <- minPsi - MIV
+  return(data.frame(tau2=tau2, 
+                    model=heuristic$model, 
+                    heuristic=heuristic$heuristic, 
+                    optDelta=optDelta, 
+                    minPsi=minPsi, MIV=MIV, MISB=MISB))
+}
+
+
