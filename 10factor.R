@@ -27,8 +27,6 @@ lin_10factor_ffd1_retain <- list(
   deltaBound=1
 )
 
-
-
 lin_10factor_ffd1_split <- list(
   meandesign=function(delta) {
     rbind(
@@ -57,7 +55,7 @@ lin_10factor_ffd2 <- list(
 #
 
 lin_10factor_model = function(x) c(1,x)
-A_lin_10factor = diag(c(2**10, rep(2**9/3,10)))
+A_lin_10factor = diag(c(2**10, rep(2**10/3,10)))
 
 heuristics_list = list(lin_10factor_ffd1_retain, 
                        lin_10factor_ffd1_split,

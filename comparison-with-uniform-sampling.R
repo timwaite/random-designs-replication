@@ -67,26 +67,14 @@ best_Psis %>% transmute(tau2=tau2,
                         MISB_RT=MISB,
                         MISB_unif = tau2 + tau2 * unif_results_summary["ISB_quad_form"],
                         Psi_RT=minPsi,
-                      IMSP_unif = unifMIV + unifMISB,
-                     Efficiency_unif_UB = minPsi/unifIMSPE) -> best_Psis
+                      IMSPE_unif = MIV_unif + MISB_unif,
+                     Efficiency_unif_UB = Psi_RT/IMSPE_unif) -> best_Psis
 
 View(best_Psis)
 
-xtable( best_Psis %>% slice( seq(from=2,to=90,by=11) ))
-
-#
-# table for paper, Section 4.3 
-#
 library(xtable)
-xtable(t(best_Psis %>% slice( seq(from=2,to=90,by=11) ) %>% select(tau2, minPsi, unifImspe, unifEfficiencyUB)))
 
 #
-# plot of design realisations
+# Table for paper, Section 4.3
 #
-
-delta_split <- heuristics_results %>% filter(model=="Linear (1 factor)", tau2==1, heuristic=="Split") %>% select(optDelta) %>% as.numeric()
-(xi_split <-  rep(c(-1,1),each=4) + delta_split/2*c(1,3,5,7,-7,-5,-3,-1) + delta_split/2* runif(1,min=-1,max=1))
-
-plot(xi_unif[[1]], rep(0,8), pch=4, xlim=c(-1,1))
-points(xi_split, rep(1,8), pch=2)
-
+xtable( best_Psis %>% slice( seq(from=2,to=90,by=11) ), digits=3)
